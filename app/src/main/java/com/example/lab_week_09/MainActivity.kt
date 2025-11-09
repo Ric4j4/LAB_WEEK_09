@@ -1,6 +1,7 @@
 package com.example.lab_week_09
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
@@ -12,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -23,6 +25,9 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.example.lab_week_09.ui.theme.LAB_WEEK_09Theme
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.Types
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 
 data class Student(val name: String)
 
@@ -53,6 +58,7 @@ fun Home(navigateFromHomeToResult: (String) -> Unit) {
         )
     }
     var inputField by remember { mutableStateOf(Student("")) }
+    val context = LocalContext.current
     HomeContent(
         listData = listData,
         inputField = inputField,
@@ -60,13 +66,19 @@ fun Home(navigateFromHomeToResult: (String) -> Unit) {
             inputField = inputField.copy(name = newValue)
         },
         onButtonClick = {
-            if (inputField.name.isNotEmpty()) {
+            if (inputField.name.isNotBlank()) {
                 listData.add(inputField)
                 inputField = Student("")
+            } else {
+                Toast.makeText(context, "Input tidak boleh kosong", Toast.LENGTH_SHORT).show()
             }
         },
         navigateFromHomeToResult = {
-            navigateFromHomeToResult(listData.toList().toString())
+            val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+            val type = Types.newParameterizedType(List::class.java, Student::class.java)
+            val adapter = moshi.adapter<List<Student>>(type)
+            val json = adapter.toJson(listData)
+            navigateFromHomeToResult(json)
         }
     )
 }
@@ -101,15 +113,13 @@ fun HomeContent(
                 ) {
                     Button(
                         onClick = onButtonClick,
-                        modifier = Modifier
-                            .width(150.dp)
+                        modifier = Modifier.width(150.dp)
                     ) {
                         Text(text = stringResource(id = R.string.button_click))
                     }
                     Button(
                         onClick = navigateFromHomeToResult,
-                        modifier = Modifier
-                            .width(150.dp)
+                        modifier = Modifier.width(150.dp)
                     ) {
                         Text(text = stringResource(id = R.string.button_navigate))
                     }
@@ -173,15 +183,22 @@ fun App(navController: NavHostController) {
 
 @Composable
 fun ResultContent(listData: String) {
-    Column(
+    val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+    val type = Types.newParameterizedType(List::class.java, Student::class.java)
+    val adapter = moshi.adapter<List<Student>>(type)
+    val dataList = adapter.fromJson(listData) ?: emptyList()
+    LazyColumn(
         modifier = Modifier
             .padding(16.dp)
             .fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        OnBackgroundTitleText(text = "Data yang dikirim:")
-        OnBackgroundItemText(text = listData)
+        item {
+            OnBackgroundTitleText(text = "Data yang dikirim:")
+        }
+        items(dataList) { student ->
+            OnBackgroundItemText(text = student.name)
+        }
     }
 }
 
