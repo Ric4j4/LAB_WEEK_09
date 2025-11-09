@@ -70,34 +70,43 @@ fun HomeContent(
     onInputValueChange: (String) -> Unit,
     onButtonClick: () -> Unit
 ) {
-    LazyColumn(
-        modifier = Modifier
-            .padding(16.dp)
-            .fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+    LazyColumn {
         item {
-            Text(text = stringResource(id = R.string.enter_item))
-            Spacer(modifier = Modifier.height(8.dp))
-            TextField(
-                value = inputField.name,
-                onValueChange = { onInputValueChange(it) },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Button(onClick = onButtonClick) {
-                Text(text = stringResource(id = R.string.button_click))
+            Column(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                OnBackgroundTitleText(
+                    text = stringResource(id = R.string.enter_item)
+                )
+
+                TextField(
+                    value = inputField.name,
+                    onValueChange = { onInputValueChange(it) },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Text
+                    )
+                )
+
+                PrimaryTextButton(
+                    text = stringResource(id = R.string.button_click)
+                ) {
+                    onButtonClick()
+                }
             }
-            Spacer(modifier = Modifier.height(16.dp))
         }
 
         items(listData) { item ->
-            Text(
-                text = item.name,
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(vertical = 4.dp)
-            )
+            Column(
+                modifier = Modifier
+                    .padding(vertical = 4.dp)
+                    .fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                OnBackgroundItemText(text = item.name)
+            }
         }
     }
 }
@@ -109,3 +118,34 @@ fun PreviewHome() {
         Home()
     }
 }
+
+@Composable
+fun OnBackgroundTitleText(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleLarge,
+        modifier = Modifier.padding(bottom = 8.dp)
+    )
+}
+
+@Composable
+fun PrimaryTextButton(text: String, onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier
+            .padding(top = 8.dp)
+            .fillMaxWidth()
+    ) {
+        Text(text = text)
+    }
+}
+
+@Composable
+fun OnBackgroundItemText(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodyLarge,
+        modifier = Modifier.padding(vertical = 4.dp)
+    )
+}
+
